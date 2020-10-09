@@ -34,13 +34,13 @@ int hashFile(FILE *input)
             number = fgetc(ascii);
             if (number == EOF)
             {
-                hashResult = (hashResult + atoi(lineNumberString)) % 100;
+                hashResult = (hashResult + atoi(lineNumberString)) % 1000;
                 hasNext = 1;
             }
             lineNumberString[numberIndex] = number;
             if (numberIndex == LETTERS_PER_LINE - 1)
             {
-                hashResult = (hashResult + atoi(lineNumberString)) % 100;
+                hashResult = (hashResult + atoi(lineNumberString)) % 1000;
                 numberIndex = 0;
             }
             else
