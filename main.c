@@ -3,15 +3,15 @@
 #include <string.h>
 #include "rsa.h"
 
-#define LETTERS_PER_LINE 8
+#define LETTERS_PER_LINE 3
 
-unsigned long long hashFile(FILE *input)
+int hashFile(FILE *input)
 {
     FILE *ascii;
-    unsigned long long hashResult = 0;
+    int hashResult = 0;
     if ((ascii = fopen("ascii.txt", "r+")) == NULL)
     {
-        printf("Error - Couldn't open the file");
+        printf("Error - Couldn't open the ascii file");
     }
     else
     {
@@ -34,13 +34,13 @@ unsigned long long hashFile(FILE *input)
             number = fgetc(ascii);
             if (number == EOF)
             {
-                hashResult = hashResult + atoi(lineNumberString);
+                hashResult = (hashResult + atoi(lineNumberString)) % 100;
                 hasNext = 1;
             }
             lineNumberString[numberIndex] = number;
             if (numberIndex == LETTERS_PER_LINE - 1)
             {
-                hashResult = hashResult + atoi(lineNumberString);
+                hashResult = (hashResult + atoi(lineNumberString)) % 100;
                 numberIndex = 0;
             }
             else
@@ -49,7 +49,7 @@ unsigned long long hashFile(FILE *input)
             }
         }
     }
-    return hashResult;
+    return hashResult % 100;
 }
 
 int main()
