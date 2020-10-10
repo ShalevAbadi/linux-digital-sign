@@ -1,5 +1,5 @@
 build:
-	gcc rsa.c main.c -o main.o
+	gcc hashFile.c rsa.c main.c -o main.o
 	chmod 777 ./main.o
 
 clean:
