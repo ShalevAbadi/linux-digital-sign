@@ -1,3 +1,7 @@
+#keys
+rsa.private
+rsa.public
+
 # Prerequisites
 *.d
 

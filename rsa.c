@@ -76,8 +76,8 @@ int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
     int k = 2;  // A constant value 
     int d = (1 + (k*phi))/e;
 
-    *privateK = d;
-    *publicK = e;
+    *publicK = d;
+    *privateK = e;
     * resN = n;
 
     return 1;

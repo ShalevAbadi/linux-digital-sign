@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include "rsa.h"
@@ -24,35 +25,37 @@ void readPublicKey(int *key, int *keyLength)
 {
     FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "r");
     assert(publicKeyFile);
-    fscanf("%d %d", keyLength, key);
+    fscanf(publicKeyFile, "%d %d", keyLength, key);
     fclose(publicKeyFile);
 }
 
 void readPrivateKey(int *key, int *keyLength)
 {
     FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "r");
-    assert(publicKeyFile);
-    fscanf("%d", keyLength);
-    fclose(publicKeyFile);
     FILE *privateKeyFile = fopen(PRIVATE_KEY_FILE_NAME, "r");
+    assert(publicKeyFile);
     assert(privateKeyFile);
-    fscanf("%d", keyLength);
+    fscanf(publicKeyFile, "%d", keyLength);
+    fclose(publicKeyFile);
+    fscanf(privateKeyFile, "%d", keyLength);
     fclose(privateKeyFile);
 }
 
 void writePublicKey(int key, int keyLength)
-{
-    FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "w");
+{   
+    FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "w+");
     assert(publicKeyFile);
-    fprintf("%d %d", keyLength, key);
+    printf("writing public key to %s\n", PUBLIC_KEY_FILE_NAME);
+    fprintf(publicKeyFile, "%d %d", keyLength, key);
     fclose(publicKeyFile);
 }
 
 void writePrivateKey(int key)
 {
-    FILE *privateKeyFile = fopen(PRIVATE_KEY_FILE_NAME, "w");
+    FILE *privateKeyFile = fopen(PRIVATE_KEY_FILE_NAME, "w+");
     assert(privateKeyFile);
-    fprintf("%d", key);
+    printf("writing private key to %s\n", PRIVATE_KEY_FILE_NAME);
+    fprintf(privateKeyFile, "%d", key);
     fclose(privateKeyFile);
 }
 
@@ -70,15 +73,12 @@ int hash()
 }
 
 int encryptHash()
-{
+{   
     int hash, publicK, keyLength;
     printf("Enter hash\n");
     scanf("%d", &hash);
-    printf("Enter key\n");
-    scanf("%d", &publicK);
-    printf("Enter key length\n");
-    scanf("%d", &keyLength);
-    printf("%d\n", encrypt(hash, publicK, keyLength));
+    readPublicKey(&publicK, &keyLength);
+    printf("Encrypted hash is: %d\n", encrypt(hash, publicK, keyLength));
 }
 
 int decryptHash()
@@ -105,7 +105,26 @@ int generateKeyPair()
         return 1;
     }
     printf("Public key: %d\nPrivate key: %d\nKey length: %d\n", publicK, privateK, keyLength);
+    writePrivateKey(privateK);
+    writePublicKey(publicK, keyLength);
     return 0;
+}
+
+int signFile()
+{
+    FILE *input;
+    char filePath[MAX_CHAR_INPUT_SIZE];
+    int hash, publicK, keyLength, sinature;
+    printf("Enter file path\n");
+    scanf("%49[^\n]%*c", filePath);
+    if ((input = fopen(filePath, "r")) == NULL)
+    {
+        printf("Error - Couldn't open the file");
+        return 1;
+    }
+    hash=hashFile(input);
+    readPublicKey(&publicK, &keyLength);
+    printf("Singature: %d", encrypt(hash, publicK, keyLength));
 }
 
 int validateSignature(){
@@ -122,10 +141,7 @@ int validateSignature(){
     hash=hashFile(input);
     printf("Enter singature\n");
     scanf("%d", &sinature);
-    printf("Enter key\n");
-    scanf("%d", &publicK);
-    printf("Enter key length\n");
-    scanf("%d", &keyLength);
+    readPublicKey(&publicK, &keyLength);
     if(isValidSignature(hash, publicK, keyLength, sinature)){
         printf("Valid signature :)\n");
     } else {
@@ -138,11 +154,14 @@ int main()
 {   
     FILE *input;
     int option;
-    printf("Select option:\n1)hash\n2)encrypt\n3)validate signature\n4)decrypt hash\n5)generate keys\n");
+    printf("Select option:\n0)Sign a file\n1)hash\n2)encrypt\n3)validate signature\n4)decrypt hash\n5)generate keys\n");
     scanf("%d", &option);
     getchar();
     switch(option)
-    {
+    {   
+        case 0:
+            signFile();
+            break;
         case 1:
             hash();
             break;
