@@ -37,7 +37,7 @@ void readPrivateKey(int *key, int *keyLength)
     assert(privateKeyFile);
     fscanf(publicKeyFile, "%d", keyLength);
     fclose(publicKeyFile);
-    fscanf(privateKeyFile, "%d", keyLength);
+    fscanf(privateKeyFile, "%d", key);
     fclose(privateKeyFile);
 }
 
@@ -74,11 +74,11 @@ int hash()
 
 int encryptHash()
 {   
-    int hash, publicK, keyLength;
+    int hash, privateK, keyLength;
     printf("Enter hash\n");
     scanf("%d", &hash);
-    readPublicKey(&publicK, &keyLength);
-    printf("Encrypted hash is: %d\n", encrypt(hash, publicK, keyLength));
+    readPrivateKey(&privateK, &keyLength);
+    printf("Encrypted hash is: %d\n", encrypt(hash, privateK, keyLength));
 }
 
 int decryptHash()
@@ -86,16 +86,13 @@ int decryptHash()
     int hash, privateK, keyLength;
     printf("Enter encrypted hash\n");
     scanf("%d", &hash);
-    printf("Enter key\n");
-    scanf("%d", &privateK);
-    printf("Enter key length\n");
-    scanf("%d", &keyLength);
+    readPublicKey(&privateK, &keyLength);
     printf("%d\n", decrypt(hash, privateK, keyLength));
 }
 
 int generateKeyPair()
 {
-    int p = 47; 
+    int p = 919; 
     int q = 911; 
     int publicK, privateK, keyLength;
 
@@ -114,7 +111,7 @@ int signFile()
 {
     FILE *input;
     char filePath[MAX_CHAR_INPUT_SIZE];
-    int hash, publicK, keyLength, sinature;
+    int hash, privateK, keyLength, sinature;
     printf("Enter file path\n");
     scanf("%49[^\n]%*c", filePath);
     if ((input = fopen(filePath, "r")) == NULL)
@@ -123,8 +120,8 @@ int signFile()
         return 1;
     }
     hash=hashFile(input);
-    readPublicKey(&publicK, &keyLength);
-    printf("Singature: %d", encrypt(hash, publicK, keyLength));
+    readPrivateKey(&privateK, &keyLength);
+    printf("Signature: %d", encrypt(hash, privateK, keyLength));
 }
 
 int validateSignature(){

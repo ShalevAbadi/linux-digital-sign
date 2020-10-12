@@ -32,6 +32,14 @@ int exponentMod(int A, int B, int C)
 	return (int)((y + C) % C); 
 } 
 
+int modInverse(int a, int m) 
+{ 
+    a = a%m; 
+    for (int x=1; x<m; x++) 
+       if ((a*x) % m == 1) 
+          return x; 
+} 
+
 // Returns gcd of a and b 
 int gcd(int a, int h) 
 { 
@@ -45,6 +53,23 @@ int gcd(int a, int h)
         h = temp; 
     } 
 } 
+
+int isPrime(int n)  
+{  
+    // Corner cases  
+    if (n <= 1)  return 0;  
+    if (n <= 3)  return 1;  
+    
+    // This is checked so that we can skip   
+    // middle five numbers in below loop  
+    if (n%2 == 0 || n%3 == 0) return 0;  
+    
+    for (int i=5; i*i<=n; i=i+6)  
+        if (n%i == 0 || n%(i+2) == 0)  
+           return 0;  
+    
+    return 1;  
+}  
 
 int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
 {
@@ -60,9 +85,8 @@ int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
     { 
         // e must be co-prime to phi and 
         // smaller than phi. 
-        if (gcd(e, phi)==1) 
+        if (isPrime(e) && gcd(e, phi)==1) 
             break;
-
         else
             e++; 
     } 
@@ -74,11 +98,11 @@ int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
     // choosing d such that it satisfies 
     // d*e = 1 + k * totient 
     int k = 2;  // A constant value 
-    int d = (1 + (k*phi))/e;
+    int d = modInverse(e, phi);
 
     *publicK = d;
     *privateK = e;
-    * resN = n;
+    *resN = n;
 
     return 1;
 }
@@ -93,16 +117,16 @@ int encrypt(int plain, int publicK, int keyLength)
     return exponentMod(plain, publicK, keyLength);
 }
 
-int isValidSignature(int hash, int publicK, int keyLength, int expectedChiper)
+int isValidSignature(int hash, int publicK, int keyLength, int expectedCipher)
 {
-    return encrypt(hash, publicK, keyLength) == expectedChiper;
+    return decrypt(expectedCipher, publicK, keyLength) == hash;
 }
 
 // Code to demonstrate RSA algorithm 
 int rsa(int hashKey) 
 { 
     // Two random prime numbers 
-    int p = 47; 
+    int p = 11; 
     int q = 911; 
     int publicK, privateK, keyLength;
 
