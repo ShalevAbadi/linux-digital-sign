@@ -2,20 +2,20 @@
 
 int hashFile(FILE *input)
 {
-    FILE *ascii;
     int hashResult = 0;
-    if ((ascii = fopen("mid.tmp", "w+r")) == NULL)
-    {
-        printf("Error - Couldn't open the ascii file");
-    }
+    FILE* ascii = tmpfile(); 
+    if (ascii == NULL) 
+    { 
+        printf("Unable to create temp file"); 
+        return NULL; 
+    } 
     else
     {
         char letter;
         char number;
         int hasNext = 0;
         int numberIndex = 0;
-        char *lineValue = malloc(sizeof(char) * LETTERS_PER_LINE);
-        char *lineNumberString = malloc(sizeof(char) * LETTERS_PER_LINE);
+        char *lineNumberString = malloc(sizeof(char) * FOLDING_DIGITS_COUNT);
         while ((letter = fgetc(input)) != EOF)
         {
             if (letter != EOF)
@@ -33,7 +33,7 @@ int hashFile(FILE *input)
                 hasNext = 1;
             }
             lineNumberString[numberIndex] = number;
-            if (numberIndex == LETTERS_PER_LINE - 1)
+            if (numberIndex == FOLDING_DIGITS_COUNT - 1)
             {
                 hashResult = (hashResult + atoi(lineNumberString)) % 1000;
                 numberIndex = 0;
@@ -44,5 +44,5 @@ int hashFile(FILE *input)
             }
         }
     }
-    return hashResult % 100;
+    return hashResult % FOLDING_MOD;
 }

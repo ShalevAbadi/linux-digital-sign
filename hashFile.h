@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LETTERS_PER_LINE 3
+#define FOLDING_DIGITS_COUNT 3
+#define FOLDING_MOD 100
 int hashFile(FILE *input);
