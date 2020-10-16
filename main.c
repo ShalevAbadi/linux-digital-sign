@@ -2,61 +2,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include<time.h> 
 #include "rsa.h"
 #include "hashFile.h"
 
 #define MAX_CHAR_INPUT_SIZE 300
 #define PRIVATE_KEY_FILE_NAME "rsa.private"
 #define PUBLIC_KEY_FILE_NAME "rsa.public"
- 
-/*
-    rsa.public structure
-    keyLength publicK
-*/
+#define SIGNATURE_FILE_NAME "signature.enc"
 
 /*
-Hash = 78
-Public key: 3
-Private key: 27907
-Key length: 42817
-Encrypted hash: 3565
+    keyfiles structure:
+    keyLength key
 */
-void readPublicKey(int *key, int *keyLength)
+
+void readKey(int *key, int *keyLength, char* filename)
 {
-    FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "r");
-    assert(publicKeyFile);
-    fscanf(publicKeyFile, "%d %d", keyLength, key);
-    fclose(publicKeyFile);
+    FILE *keyFile = fopen(filename, "r");
+    assert(keyFile);
+    fscanf(keyFile, "%d %d", keyLength, key);
+    fclose(keyFile);
 }
 
-void readPrivateKey(int *key, int *keyLength)
-{
-    FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "r");
-    FILE *privateKeyFile = fopen(PRIVATE_KEY_FILE_NAME, "r");
-    assert(publicKeyFile);
-    assert(privateKeyFile);
-    fscanf(publicKeyFile, "%d", keyLength);
-    fclose(publicKeyFile);
-    fscanf(privateKeyFile, "%d", key);
-    fclose(privateKeyFile);
-}
-
-void writePublicKey(int key, int keyLength)
+void writeKey(int key, int keyLength, char* filename)
 {   
-    FILE *publicKeyFile = fopen(PUBLIC_KEY_FILE_NAME, "w+");
-    assert(publicKeyFile);
-    printf("writing public key to %s\n", PUBLIC_KEY_FILE_NAME);
-    fprintf(publicKeyFile, "%d %d", keyLength, key);
-    fclose(publicKeyFile);
-}
-
-void writePrivateKey(int key)
-{
-    FILE *privateKeyFile = fopen(PRIVATE_KEY_FILE_NAME, "w+");
-    assert(privateKeyFile);
-    printf("writing private key to %s\n", PRIVATE_KEY_FILE_NAME);
-    fprintf(privateKeyFile, "%d", key);
-    fclose(privateKeyFile);
+    FILE *keyFile = fopen(filename, "w+");
+    assert(keyFile);
+    printf("writing key to %s\n", keyFile);
+    fprintf(keyFile, "%d %d", keyLength, key);
+    fclose(keyFile);
 }
 
 int hash()
@@ -77,34 +51,82 @@ int encryptHash()
     int hash, privateK, keyLength;
     printf("Enter hash\n");
     scanf("%d", &hash);
-    readPrivateKey(&privateK, &keyLength);
+    readKey(&privateK, &keyLength, PRIVATE_KEY_FILE_NAME);
     printf("Encrypted hash is: %d\n", encrypt(hash, privateK, keyLength));
 }
 
 int decryptHash()
 {
-    int hash, privateK, keyLength;
+    int hash, publicK, keyLength;
     printf("Enter encrypted hash\n");
     scanf("%d", &hash);
-    readPublicKey(&privateK, &keyLength);
-    printf("%d\n", decrypt(hash, privateK, keyLength));
+    readKey(&publicK, &keyLength, PUBLIC_KEY_FILE_NAME);
+    printf("%d\n", decrypt(hash, publicK, keyLength));
+}
+
+int generateRandomPrime()
+{      
+    int primes_len = 143;
+    int primes[] = {101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, \
+                179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, \
+                263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, \
+                353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, \
+                443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, \
+                547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, \
+                641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, \
+                739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, \
+                839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, \
+                947, 953, 967, 971, 977, 983, 991, 997};
+    time_t t;
+    srand((unsigned) time(&t));
+    int n = rand() % primes_len;
+    return primes[n];
 }
 
 int generateKeyPair()
-{
-    int p = 919; 
-    int q = 911; 
-    int publicK, privateK, keyLength;
-
+{   
+    int p, q, publicK, privateK, keyLength;
+    p = generateRandomPrime(); 
+    do
+    {
+        q = generateRandomPrime();
+    }
+    while(q == p);
     if (!generateKeys(p, q, &keyLength, &publicK, &privateK))
     {
         printf("Failed to generate keys\n");
         return 1;
     }
     printf("Public key: %d\nPrivate key: %d\nKey length: %d\n", publicK, privateK, keyLength);
-    writePrivateKey(privateK);
-    writePublicKey(publicK, keyLength);
+    writeKey(privateK, keyLength, PRIVATE_KEY_FILE_NAME);
+    writeKey(publicK, keyLength, PUBLIC_KEY_FILE_NAME);
     return 0;
+}
+
+void wrieSignatureToFile(int signature, char* fileName)
+{
+    FILE *input;
+    if ((input = fopen(fileName, "w+")) == NULL)
+        {
+            printf("Error - Couldn't open the file");
+            return;
+        }
+    fprintf(input, "%d\n", signature);
+    fclose(input);
+}
+
+int readSignatureFromFile(char* fileName)
+{
+    FILE *input;
+    int res;
+    if ((input = fopen(fileName, "r")) == NULL)
+        {
+            printf("Error - Couldn't open the file");
+            return 1;
+        }
+    fscanf(input, "%d", &res);
+    fclose(input);
+    return res;
 }
 
 int signFile()
@@ -120,14 +142,15 @@ int signFile()
         return 1;
     }
     hash=hashFile(input);
-    readPrivateKey(&privateK, &keyLength);
-    printf("Signature: %d", encrypt(hash, privateK, keyLength));
+    fclose(input);
+    readKey(&privateK, &keyLength, PRIVATE_KEY_FILE_NAME);
+    wrieSignatureToFile(encrypt(hash, privateK, keyLength), SIGNATURE_FILE_NAME);
 }
 
 int validateSignature(){
     FILE *input;
     char filePath[MAX_CHAR_INPUT_SIZE];
-    int hash, publicK, keyLength, sinature;
+    int hash, publicK, keyLength, signature;
     printf("Enter file path\n");
     scanf("%49[^\n]%*c", filePath);
     if ((input = fopen(filePath, "r")) == NULL)
@@ -136,10 +159,9 @@ int validateSignature(){
         return 1;
     }
     hash=hashFile(input);
-    printf("Enter singature\n");
-    scanf("%d", &sinature);
-    readPublicKey(&publicK, &keyLength);
-    if(isValidSignature(hash, publicK, keyLength, sinature)){
+    readKey(&publicK, &keyLength, PUBLIC_KEY_FILE_NAME);
+    signature = readSignatureFromFile(SIGNATURE_FILE_NAME);
+    if(isValidSignature(hash, publicK, keyLength, signature)){
         printf("Valid signature :)\n");
     } else {
        printf("Not a valid signature :(\n");

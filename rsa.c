@@ -1,12 +1,5 @@
-// C program for RSA asymmetric cryptographic 
-// algorithm. For demonstration values are 
-// relatively small compared to practical 
-// application 
 #include<stdio.h> 
 #include<math.h> 
-
-// Recursive C program to compute modular power 
-#include <stdio.h> 
 
 int exponentMod(int A, int B, int C) 
 { 
@@ -73,18 +66,11 @@ int isPrime(int n)
 
 int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
 {
-    
-    // First part of public key: 
     int n = p*q; 
-    
-    // Finding other part of public key. 
-    // e stands for encrypt 
     int e = 2; 
     int phi = (p-1)*(q-1); 
     while (e < phi) 
     { 
-        // e must be co-prime to phi and 
-        // smaller than phi. 
         if (isPrime(e) && gcd(e, phi)==1) 
             break;
         else
@@ -94,10 +80,7 @@ int generateKeys(int p, int q, int* resN, int* publicK, int* privateK)
         printf("Can't find E\n");
         return 0;
     }
-    // Private key (d stands for decrypt) 
-    // choosing d such that it satisfies 
-    // d*e = 1 + k * totient 
-    int k = 2;  // A constant value 
+    int k = 2;
     int d = modInverse(e, phi);
 
     *publicK = d;
@@ -121,33 +104,3 @@ int isValidSignature(int hash, int publicK, int keyLength, int expectedCipher)
 {
     return decrypt(expectedCipher, publicK, keyLength) == hash;
 }
-
-// Code to demonstrate RSA algorithm 
-int rsa(int hashKey) 
-{ 
-    // Two random prime numbers 
-    int p = 11; 
-    int q = 911; 
-    int publicK, privateK, keyLength;
-
-    if (!generateKeys(p, q, &keyLength, &publicK, &privateK))
-    {
-        printf("Failed to generate keys\n");
-        return 0;
-    }
-    //checkDistinctPrimeFactors(p, q);
-    // Message to be encrypted 
-    printf("\nMessage data = %d", hashKey);
-  
-    // Encryption c = (msg ^ e) % n 
-    int c = encrypt(hashKey, publicK, keyLength);
-    printf("\nEncrypted data = %d", c); 
-  
-    // Decryption m = (c ^ d) % n 
-    int m = decrypt(c, privateK, keyLength);
-    printf("\nOriginal Message Sent = %d", m); 
-    
-    printf("\n N = %d and D=%d and E=%d\n", keyLength, privateK, publicK);
-    return 1; 
-} 
-// This code is contributed by Akash Sharan. 

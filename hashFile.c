@@ -4,7 +4,7 @@ int hashFile(FILE *input)
 {
     FILE *ascii;
     int hashResult = 0;
-    if ((ascii = fopen("ascii.txt", "r+")) == NULL)
+    if ((ascii = fopen("mid.tmp", "w+r")) == NULL)
     {
         printf("Error - Couldn't open the ascii file");
     }
