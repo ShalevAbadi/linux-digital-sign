@@ -6,10 +6,10 @@
 #include "rsa.h"
 #include "hashFile.h"
 
-#define MAX_CHAR_INPUT_SIZE 300
-#define PRIVATE_KEY_FILE_NAME "rsa.private"
-#define PUBLIC_KEY_FILE_NAME "rsa.public"
-#define SIGNATURE_FILE_NAME "signature.enc"
+#define OPTION_ARGV_POS 1
+#define FIRST_FILE_NAME_ARGV_POS 2
+#define SECOND_FILE_NAME_ARGV_POS 3
+#define THIRD_FILE_NAME_ARGV_POS 4
 
 /*
     keyfiles structure:
@@ -33,37 +33,6 @@ void writeKey(int key, int keyLength, char* filename)
     fclose(keyFile);
 }
 
-int hash()
-{   
-    FILE *input;
-    char filePath[MAX_CHAR_INPUT_SIZE];
-    printf("Enter file path\n");
-    scanf("%49[^\n]%*c", filePath);
-    if ((input = fopen(filePath, "r")) == NULL)
-    {
-        printf("Error - Couldn't open the file");
-    }
-    printf("The mother fucking hash isssss: %d\n" , hashFile(input));
-}
-
-int encryptHash()
-{   
-    int hash, privateK, keyLength;
-    printf("Enter hash\n");
-    scanf("%d", &hash);
-    readKey(&privateK, &keyLength, PRIVATE_KEY_FILE_NAME);
-    printf("Encrypted hash is: %d\n", encrypt(hash, privateK, keyLength));
-}
-
-int decryptHash()
-{
-    int hash, publicK, keyLength;
-    printf("Enter encrypted hash\n");
-    scanf("%d", &hash);
-    readKey(&publicK, &keyLength, PUBLIC_KEY_FILE_NAME);
-    printf("%d\n", decrypt(hash, publicK, keyLength));
-}
-
 int generateRandomPrime()
 {      
     int primes_len = 143;
@@ -83,7 +52,7 @@ int generateRandomPrime()
     return primes[n];
 }
 
-int generateKeyPair()
+int generateKeyPair(char* privateKeyFileName, char* publicKeyFileName)
 {   
     int p, q, publicK, privateK, keyLength;
     p = generateRandomPrime(); 
@@ -98,8 +67,8 @@ int generateKeyPair()
         return 1;
     }
     printf("Public key: %d\nPrivate key: %d\nKey length: %d\n", publicK, privateK, keyLength);
-    writeKey(privateK, keyLength, PRIVATE_KEY_FILE_NAME);
-    writeKey(publicK, keyLength, PUBLIC_KEY_FILE_NAME);
+    writeKey(privateK, keyLength, privateKeyFileName);
+    writeKey(publicK, keyLength, publicKeyFileName);
     return 0;
 }
 
@@ -129,38 +98,32 @@ int readSignatureFromFile(char* fileName)
     return res;
 }
 
-int signFile()
+int signFile(char* fileToSign, char* sigantureFileName, char* privateKeyFileName)
 {
     FILE *input;
-    char filePath[MAX_CHAR_INPUT_SIZE];
     int hash, privateK, keyLength, sinature;
-    printf("Enter file path\n");
-    scanf("%49[^\n]%*c", filePath);
-    if ((input = fopen(filePath, "r")) == NULL)
+    if ((input = fopen(fileToSign, "r")) == NULL)
     {
         printf("Error - Couldn't open the file");
         return 1;
     }
     hash=hashFile(input);
     fclose(input);
-    readKey(&privateK, &keyLength, PRIVATE_KEY_FILE_NAME);
-    wrieSignatureToFile(encrypt(hash, privateK, keyLength), SIGNATURE_FILE_NAME);
+    readKey(&privateK, &keyLength, privateKeyFileName);
+    wrieSignatureToFile(encrypt(hash, privateK, keyLength), sigantureFileName);
 }
 
-int validateSignature(){
+int validateSignature(char* fileToValidate, char* sigantureFileName, char* publicKeyFileName){
     FILE *input;
-    char filePath[MAX_CHAR_INPUT_SIZE];
     int hash, publicK, keyLength, signature;
-    printf("Enter file path\n");
-    scanf("%49[^\n]%*c", filePath);
-    if ((input = fopen(filePath, "r")) == NULL)
+    if ((input = fopen(fileToValidate, "r")) == NULL)
     {
         printf("Error - Couldn't open the file");
         return 1;
     }
     hash=hashFile(input);
-    readKey(&publicK, &keyLength, PUBLIC_KEY_FILE_NAME);
-    signature = readSignatureFromFile(SIGNATURE_FILE_NAME);
+    readKey(&publicK, &keyLength, publicKeyFileName);
+    signature = readSignatureFromFile(sigantureFileName);
     if(isValidSignature(hash, publicK, keyLength, signature)){
         printf("Valid signature :)\n");
     } else {
@@ -169,36 +132,41 @@ int validateSignature(){
     return 0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {   
-    FILE *input;
+
     int option;
-    printf("Select option:\n0)Sign a file\n1)hash\n2)encrypt\n3)validate signature\n4)decrypt hash\n5)generate keys\n");
-    scanf("%d", &option);
-    getchar();
-    switch(option)
-    {   
+    char *fileName1, *fileName2, *fileName3;
+    if( argc == 4 || argc == 5 ) {
+        option = atoi(argv[OPTION_ARGV_POS]);
+        fileName1 = argv[FIRST_FILE_NAME_ARGV_POS];
+        fileName2 = argv[SECOND_FILE_NAME_ARGV_POS];
+        switch(option)
+        {   
         case 0:
-            signFile();
+            fileName3 = argv[THIRD_FILE_NAME_ARGV_POS];
+            signFile(fileName1, fileName2, fileName3);
             break;
         case 1:
-            hash();
+            fileName3 = argv[THIRD_FILE_NAME_ARGV_POS];
+            validateSignature(fileName1, fileName2, fileName3);
             break;
         case 2:
-            encryptHash();
-            break;
-        case 3:
-            validateSignature();
-            break;
-        case 4:
-            decryptHash();
-            break;
-        case 5:
-            generateKeyPair();
+            generateKeyPair(fileName1, fileName2);
             break;
         default:
             printf("No option selected, bye :)");
             return 0;
+    }
+
+    }
+    else if( argc > 3 ) {
+        printf("Too many arguments supplied.\n");
+        return 1;
+    }
+    else {
+        printf("3 or 4 argument expected.\n");
+        return 1;
     }
     return 0;
 }
