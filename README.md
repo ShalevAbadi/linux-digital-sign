@@ -21,3 +21,8 @@ Validating the Digital Signature:
   
 Cleanup:  
 `make clean`  
+  
+
+Shalev Abadi  
+Omer Bresinski
+
