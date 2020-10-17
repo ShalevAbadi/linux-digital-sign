@@ -1,21 +1,22 @@
+#include <stdlib.h>
 #include "hashFile.h"
 
 int hashFile(FILE *input)
 {
     int hashResult = 0;
-    FILE* ascii = tmpfile(); 
-    if (ascii == NULL) 
-    { 
-        printf("Unable to create temp file"); 
-        return NULL; 
-    } 
+    FILE *ascii = tmpfile();
+    if (ascii == NULL)
+    {
+        printf("Unable to create temp file");
+        return 2;
+    }
     else
     {
         char letter;
         char number;
         int hasNext = 0;
         int numberIndex = 0;
-        char *lineNumberString = malloc(sizeof(char) * FOLDING_DIGITS_COUNT);
+        char *lineNumberString = (char *)malloc(sizeof(char) * FOLDING_DIGITS_COUNT);
         while ((letter = fgetc(input)) != EOF)
         {
             if (letter != EOF)

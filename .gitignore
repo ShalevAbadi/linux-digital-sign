@@ -2,6 +2,9 @@
 rsa.private
 rsa.public
 
+#Signature
+signature.enc
+
 # Prerequisites
 *.d
 
